@@ -1,23 +1,27 @@
-# Django Server Timings
+# Server Timings
 
-A Django middleware for adding Server-Timing headers to HTTP responses with automatic database query instrumentation.
+A Django middleware/Flask Extension for adding Server-Timing headers to HTTP responses with automatic database query instrumentation (only supported for Django).
 
 ## Features
 
 - Thread-safe server timing collection
-- Automatic database query timing with SQL operation detection
+- Automatic database query timing with SQL operation detection (Django only)
 - Context manager and decorator utilities for custom timing
-- Configurable via Django settings
 
 ## Installation
 
+Specify the package in your `Pipfile` or install it directly using pipenv:
+
 ```bash
-pip install django-server-timings
+pipenv install -e server-timings[flask]
 ```
+
+The extras flask and django are optional and only needed if you want to use the Flask extension or Django Middleware.
 
 ## Quick Start
 
-### 1. Add to your Django `INSTALLED_APPS` and `MIDDLEWARE` settings:
+### Add to your Django `INSTALLED_APPS` and `MIDDLEWARE` settings
+
 ```python
 INSTALLED_APPS = [
     # ... your other apps
@@ -30,17 +34,17 @@ MIDDLEWARE = [
 ]
 ```
 
-### 2. Enable timings in your Django settings
-In debug mode, timings are always enabled. In production, you can explicitly enable them.
+### Add extension to your Flask app
+
+Import and initialize the `ServerTimingsExtension` in your Flask application:
 
 ```python
-DEBUG = True
-```
 
-explicitly enable timings to force the inclusion of Server-Timing headers in production:
-```python
-DEBUG = False
-ENABLE_TIMINGS = True
+from timings import ServerTimingsExtension
+
+st = ServerTimingsExtension()
+app = Flask("diplanportal-api")
+st.init_app(app)
 ```
 
 ## Usage
@@ -89,9 +93,16 @@ metric.end()
 
 ## Requirements
 
-- Python 3.11+
+- Python 3.12+
+
+### Django
+
 - Django 4.0+
 - sqlparse 0.4.0+
+
+### Flask
+
+- Flask 2.0+
 
 ## License
 

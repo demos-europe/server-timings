@@ -1,14 +1,21 @@
 import json
+import logging
 import threading
 import time
 from contextlib import contextmanager
 
 
-class ServerTimings(threading.local):
+class ServerTimings:
     """A thread-local object storing server timings"""
-    def __init__(self):
-        super().__init__()  # Initialize thread-local storage
-        self._metrics = []  # Each thread gets its own metrics list
+
+    _thread_local = threading.local()
+
+    def __new__(cls, *args, **kwargs):
+        if not hasattr(cls._thread_local, "instance"):
+            cls._thread_local.instance = super().__new__(cls)
+            # Each thread gets its own metrics list
+            cls._thread_local.instance._metrics = [] 
+        return cls._thread_local.instance
 
     @property
     def metrics(self):
@@ -20,10 +27,17 @@ class ServerTimings(threading.local):
     def add(self, metric: "ServerTimingMetric"):
         self._metrics.append(metric)
 
-timings = ServerTimings()
+    def dump(self) -> list:
+        """Returns a JSON representation of the timings."""
+        return [
+            {"duration": m.duration, "name": m.name, "description": m.description}
+            for m in self.metrics
+        ]
+
 
 class ServerTimingMetric:
-    """ A class representing a server timing metric. """
+    """A class representing a server timing metric."""
+
     _start_time: float | None
     _end_time: float | None
     _duration: float | None
@@ -40,15 +54,16 @@ class ServerTimingMetric:
     def __init__(
         self,
         name: str,
-        description="",
+        description: str | None = None,
         duration: float | None = None,
-        timings: ServerTimings = None,
+        timings: ServerTimings | None = None,
     ):
         self.name = name.replace(" ", "-")
         self.description = description
         self._duration = duration
         self._start_time = self._end_time = None
-        self.timings = timings or ServerTimings()  # Use provided timings or create a new instance
+        # Use provided timings or create a new instance
+        self.timings = timings or ServerTimings()
 
         if self._duration:
             self.timings.add(self)
@@ -58,7 +73,6 @@ class ServerTimingMetric:
         self.start()
         yield
         self.end()
-
 
     def start(self):
         if self._duration is not None:
@@ -85,5 +99,3 @@ class ServerTimingMetric:
         if self._start_time is None:
             return 0.0  # Return 0 if the metric hasn't started
         return ((self._end_time or time.monotonic()) - self._start_time) * 1000.0
-
-

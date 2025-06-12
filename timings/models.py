@@ -13,9 +13,8 @@ class ServerTimings:
     def __new__(cls, *args, **kwargs):
         if not hasattr(cls._thread_local, "instance"):
             cls._thread_local.instance = super().__new__(cls)
-            cls._thread_local.instance._metrics = (
-                []
-            )  # Each thread gets its own metrics list
+            # Each thread gets its own metrics list
+            cls._thread_local.instance._metrics = [] 
         return cls._thread_local.instance
 
     @property

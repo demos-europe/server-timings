@@ -21,8 +21,8 @@ class ServerTimingsExtension:
     def after_request(self, response):
         timing_header = ", ".join(str(metric) for metric in g.timings.metrics)
 
-        self.logger.info(g.timings.dumps())
         if len(timing_header) > 0:
+            self.logger.info(g.timings.dumps())
             response.headers["Server-Timing"] = timing_header
             g.timings.discard_all()
 

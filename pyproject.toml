@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "server-timings"
 version = "0.2.0"
-description = "A Flask Extension for Server-Timing headers with database query instrumentation"
+description = "A Flask Extension/Django Middleware for Server-Timing headers with database query instrumentation"
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "EUPL-1.2" }
@@ -23,7 +23,6 @@ classifiers = [
   "License :: OSI Approved :: European Union Public Licence 1.2 (EUPL 1.2)",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Framework :: Django",
   "Framework :: Django :: 4.0",

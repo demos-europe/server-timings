@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "server-timings"
-version = "0.1.0"
+version = "0.2.0"
 description = "A Flask Extension for Server-Timing headers with database query instrumentation"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -36,13 +36,17 @@ classifiers = [
 
 dependencies = []
 
+
 [project.optional-dependencies]
 dev = ["pytest", "ruff"]
+django = ["Django>=4.0", "sqlparse>=0.4.0"]
+flask = ["Flask>=2.0"]
+
 
 [project.urls]
-Homepage = "https://github.com/noahkamara/django-server-timings"
-Documentation = "https://github.com/kamarademos/django-server-timings#readme"
-Repository = "https://github.com/kamarademos/django-server-timings.git"
+Homepage = "https://github.com/demos-europe/server-timings"
+Documentation = "https://github.com/demos-europe/server-timings#readme"
+Repository = "https://github.com/demos-europe/server-timings.git"
 
 [tool.setuptools.packages.find]
 where = ["."]

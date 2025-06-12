@@ -1,8 +1,11 @@
+import json
 import logging
 
 from flask import g
 
-from .models import ServerTimings
+from flask import request
+
+from timings.models import ServerTimings
 
 
 class ServerTimingsExtension:
@@ -20,9 +23,10 @@ class ServerTimingsExtension:
 
     def after_request(self, response):
         timing_header = ", ".join(str(metric) for metric in g.timings.metrics)
-
         if len(timing_header) > 0:
-            self.logger.info(g.timings.dumps())
+            self.logger.info(
+                json.dumps({"path": request.path, "timings": g.timings.dump()})
+            )
             response.headers["Server-Timing"] = timing_header
             g.timings.discard_all()
 

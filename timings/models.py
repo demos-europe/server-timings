@@ -1,15 +1,22 @@
 import json
+import logging
 import threading
 import time
 from contextlib import contextmanager
 
 
-class ServerTimings(threading.local):
+class ServerTimings:
     """A thread-local object storing server timings"""
 
-    def __init__(self):
-        super().__init__()  # Initialize thread-local storage
-        self._metrics = []  # Each thread gets its own metrics list
+    _thread_local = threading.local()
+
+    def __new__(cls, *args, **kwargs):
+        if not hasattr(cls._thread_local, "instance"):
+            cls._thread_local.instance = super().__new__(cls)
+            cls._thread_local.instance._metrics = (
+                []
+            )  # Each thread gets its own metrics list
+        return cls._thread_local.instance
 
     @property
     def metrics(self):
@@ -21,14 +28,12 @@ class ServerTimings(threading.local):
     def add(self, metric: "ServerTimingMetric"):
         self._metrics.append(metric)
 
-    def dumps(self) -> str:
+    def dump(self) -> list:
         """Returns a JSON representation of the timings."""
-        return json.dumps(
-            [
-                {"duration": m.duration, "name": m.name, "description": m.description}
-                for m in self.metrics
-            ]
-        )
+        return [
+            {"duration": m.duration, "name": m.name, "description": m.description}
+            for m in self.metrics
+        ]
 
 
 class ServerTimingMetric:

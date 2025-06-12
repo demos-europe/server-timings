@@ -62,9 +62,8 @@ class ServerTimingMetric:
         self.description = description
         self._duration = duration
         self._start_time = self._end_time = None
-        self.timings = (
-            timings or ServerTimings()
-        )  # Use provided timings or create a new instance
+        # Use provided timings or create a new instance
+        self.timings = timings or ServerTimings()
 
         if self._duration:
             self.timings.add(self)

@@ -49,7 +49,7 @@ Repository = "https://github.com/demos-europe/server-timings.git"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["timings"]
+include = ["timings", "timings.*"]
 
 [tool.ruff]
 exclude = [

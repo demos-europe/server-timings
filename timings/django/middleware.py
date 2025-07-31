@@ -20,7 +20,7 @@ class ServerTimingMiddleware:
     def __call__(self, request):
         # Bind sync storage for this request
         ServerTimings.setUp("sync")
-        
+
         try:
             thread_local_timings = ServerTimings()
             query_timings = DBQueryInstrument(thread_local_timings)

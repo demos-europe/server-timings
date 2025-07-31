@@ -43,7 +43,7 @@ class ServerTimingsExtension:
             g.timings.discard_all()
 
         return response
-    
+
     def teardown_request(self, exception):
         # Clean up storage after request
         ServerTimings.tearDown()

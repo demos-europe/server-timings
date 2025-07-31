@@ -14,10 +14,12 @@ class FastAPIServerTimingMiddleware(BaseHTTPMiddleware):
     def init_app(self, app: FastAPI):
         app.add_middleware()
 
-    async def dispatch(self, request: Request, call_next: Callable[[Request], Response]) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: Callable[[Request], Response]
+    ) -> Response:
         # Bind async storage for this request
         ServerTimings.setUp("async")
-        
+
         try:
             timings = ServerTimings()
 

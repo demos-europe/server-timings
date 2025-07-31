@@ -1,8 +1,8 @@
 import json
 import logging
-from typing import Callable
+from typing import Callable, Awaitable
 
-from fastapi import Request, Response, FastAPI
+from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from timings import ServerTimings
@@ -11,20 +11,15 @@ from timings import ServerTimings
 class FastAPIServerTimingMiddleware(BaseHTTPMiddleware):
     logger = logging.getLogger("FastAPIServerTimingMiddleware")
 
-    def init_app(self, app: FastAPI):
-        app.add_middleware()
-
     async def dispatch(
-        self, request: Request, call_next: Callable[[Request], Response]
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
-        # Bind async storage for this request
         ServerTimings.setUp("async")
 
         try:
-            timings = ServerTimings()
-
             response = await call_next(request)
 
+            timings = ServerTimings()
             timing_header = ", ".join(str(metric) for metric in timings.metrics)
 
             if len(timing_header) > 0:

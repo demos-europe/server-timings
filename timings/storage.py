@@ -1,5 +1,6 @@
 import asyncio
 import threading
+import warnings
 from contextvars import ContextVar
 from typing import Optional
 
@@ -55,6 +56,6 @@ class Storage:
         if hasattr(_thread_local, "mode") and _thread_local.mode == "sync":
             return getattr(_thread_local, "val", {})
 
-        raise RuntimeError(
-            "No storage bound for the current context. Call Storage.bind() first."
-        )
+        warnings.warn("No storage bound for the current context. Call Storage.bind() first.")
+
+        return {}

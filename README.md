@@ -64,7 +64,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     # ... your other middlewares
-    'timings.middleware.ServerTimingMiddleware',
+    'timings.middleware.FastAPIServerTimingMiddleware',
 ]
 ```
 
@@ -86,10 +86,10 @@ pipenv install -e server-timings[fastapi]
 
 ```python
 from fastapi import FastAPI
-from timings.fastapi.middleware import ServerTimingMiddleware
+from timings.fastapi.middleware import FastAPIServerTimingMiddleware
 
 app = FastAPI()
-app.add_middleware(ServerTimingMiddleware)
+app.add_middleware(FastAPIServerTimingMiddleware)
 ```
 
 3. That's it! Server-Timing headers will now be automatically added to all responses.

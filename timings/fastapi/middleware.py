@@ -8,8 +8,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from timings import ServerTimings, ServerTimingMetric
 
 
-class ServerTimingMiddleware(BaseHTTPMiddleware):
-    logger = logging.getLogger("ServerTimingMiddleware")
+class FastAPIServerTimingMiddleware(BaseHTTPMiddleware):
+    logger = logging.getLogger("FastAPIServerTimingMiddleware")
 
     def init_app(self, app: FastAPI):
         app.add_middleware()

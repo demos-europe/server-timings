@@ -5,7 +5,7 @@ httpx = pytest.importorskip("httpx")
 
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
-from timings.fastapi.middleware import ServerTimingMiddleware
+from timings.fastapi.middleware import FastAPIServerTimingMiddleware
 from timings.models import ServerTimings, ServerTimingMetric
 
 
@@ -13,7 +13,7 @@ class TestFastAPI:
     @pytest.mark.asyncio
     async def test_no_metrics_no_header(self):
         app = FastAPI()
-        app.add_middleware(ServerTimingMiddleware)
+        app.add_middleware(FastAPIServerTimingMiddleware)
 
         @app.get("/")
         async def root():
@@ -30,7 +30,7 @@ class TestFastAPI:
     @pytest.mark.asyncio
     async def test_with_metrics_adds_header(self):
         app = FastAPI()
-        app.add_middleware(ServerTimingMiddleware)
+        app.add_middleware(FastAPIServerTimingMiddleware)
 
         @app.get("/with-metrics")
         async def with_metrics():
@@ -53,7 +53,7 @@ class TestFastAPI:
     async def test_multiple_endpoints_isolated_metrics(self):
         """Test that metrics don't bleed between requests"""
         app = FastAPI()
-        app.add_middleware(ServerTimingMiddleware)
+        app.add_middleware(FastAPIServerTimingMiddleware)
 
         @app.get("/endpoint1")
         async def endpoint1():

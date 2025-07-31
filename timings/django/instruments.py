@@ -1,6 +1,6 @@
 import logging
 import sqlparse
-from .models import ServerTimingMetric
+from timings.models import ServerTimingMetric
 
 
 class DBQueryInstrument:

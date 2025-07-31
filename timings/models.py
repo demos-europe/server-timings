@@ -1,15 +1,23 @@
 import json
 import time
 from contextlib import contextmanager
+from typing import Literal
 
-from .storage import get_storage
+from .storage import Storage
 
 
 class ServerTimings:
-    """A per-request object storing server timings (sync- and async-safe)."""
+    """
+    A per-request object storing server timings (sync- and async-safe).
+
+    This class is a singleton for each request,
+    meaning it will return the same instance for the same request context.
+    It is designed to be used in a request lifecycle,
+    where you can set it up at the beginning of a request and tear it down at the end.
+    """
 
     def __new__(cls, *args, **kwargs):
-        store = get_storage()
+        store = Storage.get()
         if "instance" not in store:
             inst = super().__new__(cls)
             inst._metrics = []
@@ -33,7 +41,9 @@ class ServerTimings:
         """
         if metric.timings is not None:
             if metric.timings is not self:
-                raise ValueError("Cannot add a metric to a different ServerTimings instance")
+                raise ValueError(
+                    "Cannot add a metric to a different ServerTimings instance"
+                )
         self._metrics.append(metric)
 
     def dump(self) -> list:
@@ -42,6 +52,16 @@ class ServerTimings:
             {"duration": m.duration, "name": m.name, "description": m.description}
             for m in self.metrics
         ]
+
+    @classmethod
+    def setUp(cls, mode: Literal["sync", "async"]):
+        """SetUp ServerTimings for the current request."""
+        Storage.bind(mode)
+
+    @classmethod
+    def tearDown(cls):
+        """TearDowbn ServerTimings for the current request."""
+        Storage.cleanup()
 
 
 class ServerTimingMetric:

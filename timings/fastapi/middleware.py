@@ -5,7 +5,7 @@ from typing import Callable
 from fastapi import Request, Response, FastAPI
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from timings import ServerTimings, ServerTimingMetric
+from timings import ServerTimings
 
 
 class FastAPIServerTimingMiddleware(BaseHTTPMiddleware):
@@ -15,22 +15,29 @@ class FastAPIServerTimingMiddleware(BaseHTTPMiddleware):
         app.add_middleware()
 
     async def dispatch(self, request: Request, call_next: Callable[[Request], Response]) -> Response:
-        timings = ServerTimings()
+        # Bind async storage for this request
+        ServerTimings.setUp("async")
+        
+        try:
+            timings = ServerTimings()
 
-        response = await call_next(request)
+            response = await call_next(request)
 
-        timing_header = ", ".join(str(metric) for metric in timings.metrics)
+            timing_header = ", ".join(str(metric) for metric in timings.metrics)
 
-        if len(timing_header) > 0:
-            self.logger.info(
-                json.dumps(
-                    {
-                        "path": request.url.path,
-                        "timings": timings.dump(),
-                    }
+            if len(timing_header) > 0:
+                self.logger.info(
+                    json.dumps(
+                        {
+                            "path": request.url.path,
+                            "timings": timings.dump(),
+                        }
+                    )
                 )
-            )
-            response.headers["Server-Timing"] = timing_header
-            timings.discard_all()
+                response.headers["Server-Timing"] = timing_header
+                timings.discard_all()
 
-        return response
+            return response
+        finally:
+            # Clean up context after request
+            ServerTimings.tearDown()

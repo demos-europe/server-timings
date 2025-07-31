@@ -1,4 +1,5 @@
 import pytest
+from starlette.testclient import TestClient
 
 pytest.importorskip("fastapi")
 httpx = pytest.importorskip("httpx")
@@ -27,8 +28,27 @@ class TestFastAPI:
         assert response.status_code == 200
         assert "Server-Timing" not in response.headers
 
+    def test_sync_with_metrics_adds_header(self):
+        app = FastAPI()
+        app.add_middleware(FastAPIServerTimingMiddleware)
+
+        @app.get("/with-metrics")
+        def with_metrics():
+            ServerTimingMetric("db", description="Database query", duration=50.0)
+            ServerTimingMetric("cache", duration=10.0)
+            return {"message": "With metrics"}
+
+        client = TestClient(app)
+        response = client.get("/with-metrics")
+
+        assert response.status_code == 200
+        assert "Server-Timing" in response.headers
+        header_value = response.headers["Server-Timing"]
+        assert 'db;desc="Database query";dur=50.00;' in header_value
+        assert "cache;dur=10.00;" in header_value
+
     @pytest.mark.asyncio
-    async def test_with_metrics_adds_header(self):
+    async def test_async_with_metrics_adds_header(self):
         app = FastAPI()
         app.add_middleware(FastAPIServerTimingMiddleware)
 
@@ -50,7 +70,7 @@ class TestFastAPI:
         assert "cache;dur=10.00;" in header_value
 
     @pytest.mark.asyncio
-    async def test_multiple_endpoints_isolated_metrics(self):
+    async def test_async_multiple_endpoints_isolated_metrics(self):
         """Test that metrics don't bleed between requests"""
         app = FastAPI()
         app.add_middleware(FastAPIServerTimingMiddleware)

@@ -1,6 +1,8 @@
 # Server Timings
 
-A Django middleware/Flask Extension for adding Server-Timing headers to HTTP responses with automatic database query instrumentation (only supported for Django).
+A Django middleware/Flask Extension/FastAPI middleware for adding Server-Timing headers to HTTP responses with automatic
+database query
+instrumentation (only supported for Django).
 
 ## Features
 
@@ -16,13 +18,45 @@ Specify the package in your `Pipfile` or install it directly using pipenv:
 pipenv install -e server-timings[flask]
 ```
 
-The extras flask and django are optional and only needed if you want to use the Flask extension or Django Middleware.
+The extras flask, django, and fastapi are optional and only needed if you want to use the Flask extension, Django
+Middleware, or FastAPI middleware.
 
 ## Quick Start
 
-### Add to your Django `INSTALLED_APPS` and `MIDDLEWARE` settings
+### Flask
+
+1. Install with Flask support:
+
+```bash
+pipenv install -e server-timings[flask]
+```
+
+2. Initialize the extension in your Flask app:
 
 ```python
+from flask import Flask
+from timings import ServerTimingsExtension
+
+app = Flask(__name__)
+timings = ServerTimingsExtension()
+timings.init_app(app)  # Initialize the extension with the Flask app
+```
+
+3. That's it! Server-Timing headers will now be automatically added to all responses.
+   Check [Usage](#usage) for more details on how to use the extension.
+
+### Django
+
+1. Install with Django support:
+
+```bash
+pipenv install -e server-timings[django]
+```
+
+2. Add to your Django settings:
+
+```python
+# settings.py
 INSTALLED_APPS = [
     # ... your other apps
     'timings',
@@ -30,30 +64,51 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     # ... your other middlewares
-    'timings.middleware.ServerTimingMiddleware'
+    'timings.middleware.FastAPIServerTimingMiddleware',
 ]
 ```
 
-### Add extension to your Flask app
+3. That's it! Server-Timing headers will now be automatically added to all responses, including automatic database query
+   timing.
+   Note: Django Database queries are automatically timed and included in the Server-Timing header when the middleware is
+   enabled.
+   Check [Usage](#usage) for more details on how to track time using ServerTimingMetric.
 
-Import and initialize the `ServerTimingsExtension` in your Flask application:
+### FastAPI
+
+1. Install with FastAPI support:
+
+```bash
+pipenv install -e server-timings[fastapi]
+```
+
+2. Add the middleware to your FastAPI app:
 
 ```python
+from fastapi import FastAPI
+from timings.fastapi.middleware import FastAPIServerTimingMiddleware
 
-from timings import ServerTimingsExtension
-
-st = ServerTimingsExtension()
-app = Flask("diplanportal-api")
-st.init_app(app)
+app = FastAPI()
+app.add_middleware(FastAPIServerTimingMiddleware)
 ```
+
+3. That's it! Server-Timing headers will now be automatically added to all responses.
+   Check [Usage](#usage) for more details on how to track time using ServerTimingMetric.
 
 ## Usage
 
-### Automatic Database Query Timing
+### Adding Metrics
 
-Database queries are automatically timed and included in the Server-Timing header when the middleware is enabled.
+#### Manually
 
-### Manual Tracking
+```python
+from timings.models import ServerTimingMetric
+
+metric = ServerTimingMetric("custom_metric", "Custom operation")
+metric.start()
+# ... do work ...
+metric.end()
+```
 
 #### Using Context Manager
 
@@ -80,29 +135,14 @@ def process_data():
     return result
 ```
 
-#### Manual Metric Creation
-
-```python
-from timings.models import ServerTimingMetric
-
-metric = ServerTimingMetric("custom_metric", "Custom operation")
-metric.start()
-# ... do work ...
-metric.end()
-```
-
 ## Requirements
 
-- Python 3.12+
-
-### Django
-
-- Django 4.0+
-- sqlparse 0.4.0+
-
-### Flask
-
-- Flask 2.0+
+| Framework | Python |         Dependencies         |
+|-----------|--------|:----------------------------:|
+| Core      | 3.12+  |              -               |
+| Django    | 3.12+  | Django 4.0+, sqlparse 0.4.0+ |
+| Flask     | 3.12+  |          Flask 2.0+          |
+| FastAPI   | 3.12+  |       FastAPI 0.116.1+       |
 
 ## License
 

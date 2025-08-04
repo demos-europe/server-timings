@@ -25,8 +25,11 @@ class ServerTimingsExtension:
     def init_app(self, app):
         app.before_request(self.before_request)
         app.after_request(self.after_request)
+        app.teardown_request(self.teardown_request)
 
     def before_request(self):
+        # Bind sync storage for this request
+        ServerTimings.setUp("sync")
         g.timings = ServerTimings()
 
     def after_request(self, response):
@@ -40,3 +43,7 @@ class ServerTimingsExtension:
             g.timings.discard_all()
 
         return response
+
+    def teardown_request(self, exception):
+        # Clean up storage after request
+        ServerTimings.tearDown()

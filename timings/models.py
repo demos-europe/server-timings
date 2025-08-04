@@ -1,30 +1,49 @@
 import json
-import logging
-import threading
 import time
 from contextlib import contextmanager
+from typing import Literal
+
+from .storage import Storage
 
 
 class ServerTimings:
-    """A thread-local object storing server timings"""
+    """
+    A per-request object storing server timings (sync- and async-safe).
 
-    _thread_local = threading.local()
+    This class is a singleton for each request,
+    meaning it will return the same instance for the same request context.
+    It is designed to be used in a request lifecycle,
+    where you can set it up at the beginning of a request and tear it down at the end.
+    """
 
     def __new__(cls, *args, **kwargs):
-        if not hasattr(cls._thread_local, "instance"):
-            cls._thread_local.instance = super().__new__(cls)
-            # Each thread gets its own metrics list
-            cls._thread_local.instance._metrics = [] 
-        return cls._thread_local.instance
+        store = Storage.get()
+        if "instance" not in store:
+            inst = super().__new__(cls)
+            inst._metrics = []
+            store["instance"] = inst
+        return store["instance"]
 
     @property
     def metrics(self):
+        """Returns the list of metrics for the current instance."""
         return self._metrics
 
     def discard_all(self):
+        """Clears all metrics from the current instance."""
         self._metrics.clear()
 
     def add(self, metric: "ServerTimingMetric"):
+        """
+        Adds a metric to the current instance.
+
+        NOTE: ServerTimingMetric instances call this method in their constructor.
+        """
+        if metric.timings is not None:
+            if metric.timings is not self:
+                raise ValueError(
+                    "Cannot add a metric to a different ServerTimings instance"
+                )
         self._metrics.append(metric)
 
     def dump(self) -> list:
@@ -33,6 +52,16 @@ class ServerTimings:
             {"duration": m.duration, "name": m.name, "description": m.description}
             for m in self.metrics
         ]
+
+    @classmethod
+    def setUp(cls, mode: Literal["sync", "async"]):
+        """SetUp ServerTimings for the current request."""
+        Storage.bind(mode)
+
+    @classmethod
+    def tearDown(cls):
+        """TearDowbn ServerTimings for the current request."""
+        Storage.cleanup()
 
 
 class ServerTimingMetric:

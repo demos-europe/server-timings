@@ -33,3 +33,12 @@ if find_spec("django"):
     django_extra_enabled = True
 else:
     django_extra_enabled = False
+
+if find_spec("fastapi"):
+    from .fastapi.middleware import FastAPIServerTimingMiddleware
+
+    __all__.extend(["FastAPIServerTimingMiddleware"])
+
+    fastapi_extra_enabled = True
+else:
+    fastapi_extra_enabled = False

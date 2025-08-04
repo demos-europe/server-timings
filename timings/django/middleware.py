@@ -18,30 +18,37 @@ class ServerTimingMiddleware:
         self.logger = logging.getLogger(__name__)
 
     def __call__(self, request):
-        thread_local_timings = ServerTimings()
-        query_timings = DBQueryInstrument(thread_local_timings)
+        # Bind sync storage for this request
+        ServerTimings.setUp("sync")
 
-        with connection.execute_wrapper(query_timings):
-            metric = ServerTimingMetric(
-                name="request", description="", timings=thread_local_timings
-            )
-            with metric.measure():
-                response = self.get_response(request)
+        try:
+            thread_local_timings = ServerTimings()
+            query_timings = DBQueryInstrument(thread_local_timings)
 
-        timing_header = ", ".join(
-            str(metric) for metric in thread_local_timings.metrics
-        )
-
-        if len(timing_header) > 0:
-            self.logger.info(
-                json.dumps(
-                    {
-                        "path": request.path,
-                        "timings": thread_local_timings.dump(),
-                    }
+            with connection.execute_wrapper(query_timings):
+                metric = ServerTimingMetric(
+                    name="request", description="", timings=thread_local_timings
                 )
-            )
-            response.headers["Server-Timing"] = timing_header
-            thread_local_timings.discard_all()
+                with metric.measure():
+                    response = self.get_response(request)
 
-        return response
+            timing_header = ", ".join(
+                str(metric) for metric in thread_local_timings.metrics
+            )
+
+            if len(timing_header) > 0:
+                self.logger.info(
+                    json.dumps(
+                        {
+                            "path": request.path,
+                            "timings": thread_local_timings.dump(),
+                        }
+                    )
+                )
+                response.headers["Server-Timing"] = timing_header
+                thread_local_timings.discard_all()
+
+            return response
+        finally:
+            # Clean up storage after request
+            ServerTimings.tearDown()

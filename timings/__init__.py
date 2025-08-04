@@ -28,7 +28,7 @@ else:
 if find_spec("django"):
     from .django.middleware import ServerTimingMiddleware
 
-    __all__.extend(["FastAPIServerTimingMiddleware"])
+    __all__.extend(["ServerTimingMiddleware"])
 
     django_extra_enabled = True
 else:
